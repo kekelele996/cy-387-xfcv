@@ -5,7 +5,10 @@
         <h1>RentFind 租房平台</h1>
         <p>房源搜索、预约看房、合同管理和物业报修集中处理。</p>
       </div>
-      <el-segmented v-model="mode" :options="['列表视图', '地图视图']" />
+      <div class="toolbar-actions">
+        <el-segmented v-model="mode" :options="['列表视图', '地图视图']" />
+        <el-button type="warning" @click="goRepair">前往物业报修工作台 →</el-button>
+      </div>
     </section>
 
     <section class="filters">
@@ -23,37 +26,24 @@
     <section class="grid">
       <PropertyCard v-for="item in filtered" :key="item.id" :item="item" />
     </section>
-
-    <section class="repair">
-      <h2>物业报修</h2>
-      <el-select v-model="faultType">
-        <el-option label="水电" value="水电" />
-        <el-option label="门锁" value="门锁" />
-        <el-option label="管道" value="管道" />
-        <el-option label="家电" value="家电" />
-        <el-option label="其他" value="其他" />
-      </el-select>
-      <el-input v-model="description" placeholder="描述故障情况" />
-      <el-button type="success" @click="submitRepair">提交工单</el-button>
-      <span>{{ notice }}</span>
-    </section>
   </main>
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'HomeView' });
+
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import PropertyCard from '../components/PropertyCard.vue';
-import { createRepair, getProperties } from '../api/client';
+import { getProperties } from '../api/client';
 import type { PropertyItem } from '../types/domain';
 
+const router = useRouter();
 const properties = ref<PropertyItem[]>([]);
 const mode = ref('列表视图');
 const region = ref('');
 const maxRent = ref(7000);
 const layout = ref('全部');
-const faultType = ref('水电');
-const description = ref('');
-const notice = ref('等待提交');
 
 onMounted(async () => {
   properties.value = await getProperties();
@@ -66,8 +56,11 @@ const filtered = computed(() => properties.value.filter((item) => {
   return hitRegion && hitRent && hitLayout;
 }));
 
-async function submitRepair() {
-  const ticket = await createRepair({ faultType: faultType.value, description: description.value });
-  notice.value = `工单 ${ticket.id} 已提交：${ticket.status}`;
+function goRepair() {
+  router.push('/repair');
 }
 </script>
+
+<style scoped>
+.toolbar-actions { display: flex; gap: 16px; align-items: center; }
+</style>
