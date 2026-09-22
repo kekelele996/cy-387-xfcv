@@ -24,18 +24,10 @@
       <PropertyCard v-for="item in filtered" :key="item.id" :item="item" />
     </section>
 
-    <section class="repair">
+    <section class="repair-entry">
       <h2>物业报修</h2>
-      <el-select v-model="faultType">
-        <el-option label="水电" value="水电" />
-        <el-option label="门锁" value="门锁" />
-        <el-option label="管道" value="管道" />
-        <el-option label="家电" value="家电" />
-        <el-option label="其他" value="其他" />
-      </el-select>
-      <el-input v-model="description" placeholder="描述故障情况" />
-      <el-button type="success" @click="submitRepair">提交工单</el-button>
-      <span>{{ notice }}</span>
+      <p>水电、门锁 30 分钟内响应；管道、家电、其他 4 小时内响应，超时未接单自动升级。</p>
+      <el-button type="success" @click="$emit('openRepair')">进入物业报修工作台</el-button>
     </section>
   </main>
 </template>
@@ -43,17 +35,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import PropertyCard from '../components/PropertyCard.vue';
-import { createRepair, getProperties } from '../api/client';
+import { getProperties } from '../api/client';
 import type { PropertyItem } from '../types/domain';
+
+defineEmits<{ openRepair: [] }>();
 
 const properties = ref<PropertyItem[]>([]);
 const mode = ref('列表视图');
 const region = ref('');
 const maxRent = ref(7000);
 const layout = ref('全部');
-const faultType = ref('水电');
-const description = ref('');
-const notice = ref('等待提交');
 
 onMounted(async () => {
   properties.value = await getProperties();
@@ -65,9 +56,17 @@ const filtered = computed(() => properties.value.filter((item) => {
   const hitLayout = layout.value === '全部' || item.layout === layout.value;
   return hitRegion && hitRent && hitLayout;
 }));
-
-async function submitRepair() {
-  const ticket = await createRepair({ faultType: faultType.value, description: description.value });
-  notice.value = `工单 ${ticket.id} 已提交：${ticket.status}`;
-}
 </script>
+
+<style scoped>
+.repair-entry {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px dashed var(--el-border-color);
+  border-radius: 8px;
+}
+.repair-entry p {
+  color: var(--el-text-color-secondary);
+  margin: 8px 0 16px;
+}
+</style>
